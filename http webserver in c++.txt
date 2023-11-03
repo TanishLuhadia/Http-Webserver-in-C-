@@ -1,0 +1,260 @@
+A custom HTTP web server built from the ground up in C++. 
+
+
+Who will use my server......? 
+The one who is developing web application.
+
+What he will do ?
+He will deploy his/her site on our webserver.
+
+
+
+How the Project Works
+Initialized server by creating a socket and binding it to a 8080 port number . 
+ When a client connects to the server, the accept function is used to accept the connection, and a new socket descriptor (clientSocketDescriptor) is created to handle communication with that client.
+The server reads data from the client using the recv function, which receives the HTTP request sent by the client.
+In request if no resource name is present then server will serve index.html,
+if index.html is not present then our server is look up for index.htm if it is not present then our server send back 404 error code.
+
+
+Lets drive more deep......
+The server can be configured to listen on port number given by user and is set up to handle specific URL routes using the onRequest method.
+Listening for Requests: The server enters a loop where it continuously listens for incoming client connections.
+The server creates a socket using the socket function and binds it to the specified port using the bind function.
+It then enters a listening state using the listen function, waiting for incoming client connections.
+The received HTTP request is then passed to the parseRequest function to extract information such as the HTTP method, requested resource (URL), query parameters, and MIME type.
+The server distinguishes between two types of resources: client-side technology resources (e.g., HTML, CSS, JavaScript files) and server-side technology resources (e.g., dynamically generated content).
+Handling Client-Side Technology Resources: If the requested resource is a client-side resource (e.g., an HTML file), the server looks for the requested file on the server's filesystem.
+If the file is found, the server generates an HTTP response with appropriate headers (e.g., Content-Type) and sends the file's content back to the client using the send function.
+If the file is not found, a 404 error message is generated and sent to the client.
+Handling Server-Side Technology Resources: If the requested resource is a server-side resource, the server looks up the associated callback function for that URL route using the URL-to-function mapping defined in the TMWebProjector class.
+The corresponding function is then invoked to handle the request and generate a response.
+Response Generation: The server generates an appropriate HTTP response, including headers (e.g., content type) and the response body (file content or HTML error page).
+The server uses the Response class to create HTTP responses. It supports functions like write for sending text content and Close for closing the connection.
+For server-side resources, the callback function generates the response content and sends it to the client using the Response object.
+Forwarding: If a request handler function wants to redirect the client to another URL,
+ it sets the forwardTo property in the Request object. The server then reprocesses the 
+ request for the new URL, repeating the request handling process.
+URL Routing: The server checks if the requested URL matches any defined routes (set up using the onRequest method).
+If a match is found, the associated handler function is called to process the request.
+If no match is found, a 404 error response is generated.
+Sending the Response: The server sends the response back to the client over the network connection.
+Cleanup: After responding to a request, the server may close the client connection, and the loop continues to listen for more connections.
+MIME Type Handling: The server determines the MIME type of resources based on their file extensions. It supports common MIME types like text/html, text/css, text/javascript, image/jpeg, and more.
+Memory Management: The code appears to handle memory management by allocating and freeing memory for various data structures, such as request data and response buffers.
+Closing Connections: After handling a request, the server closes the client connection using the close function, releasing associated resources.
+
+Overall, this web server is a basic implementation for educational purposes and lacks several advanced features found in production-ready web servers, such as support for multiple threads or processes, security measures, and robust error handling. It serves as a simple example of how a web server can handle HTTP requests and responses in C++.
+
+
+
+Header File (tmwp.h): This file defines the core classes and functions used in the project.
+
+Namespace tmwp: All project components are encapsulated within the tmwp
+namespace to prevent naming conflicts.
+
+Request Class: The Request class represents an HTTP request from a client.
+It includes the following attributes:
+method: The HTTP method used in the request (e.g., GET).
+resource: The requested resource (URL).
+isClientSideTechnologyResource: Indicates whether the resource is for client-side technology (e.g., HTML, CSS, JavaScript).
+mimeType: The MIME type of the requested resource.
+dataCount and data: Parameters passed in the request.
+forwardTo: Stores a URL to which the request can be forwarded.
+keyValues: A map to store key-value pairs extracted from the request.
+
+Response Class: The Response class handles generating HTTP responses to be sent back to clients.
+It includes methods for writing content to the response and closing the connection.
+TMWebProjector Class: The TMWebProjector class is the core of the web server.
+It takes a port number during construction to specify the port on which the server will listen.
+The class includes methods for setting up request handlers and starting the server.
+
+MIME Type Detection: The project contains a function (getMIMEType) for determining the MIME type of a resource based on its file extension (e.g., text/html for HTML files).
+
+Static File Serving: The server serves static files (e.g., HTML, CSS, images) by reading them from disk and sending them as part of the HTTP response.
+It handles cases where a requested resource is not found and responds with a 404 error page.
+
+URL Routing: The onRequest method in the TMWebProjector class allows you to define URL mappings.
+When a request matches a defined URL, a specific handler function is called to process the request.
+
+Socket Programming: The project utilizes socket programming to create and manage network connections.
+It listens for incoming client connections, extracts the HTTP request, and responds accordingly.
+Forwarding Feature:
+
+There is a feature that allows one URL to be redirected to another URL.
+Server-Side Resource Handling: For server-side technology resources, the server looks for mappings in requestMappings and calls associated functions to handle the request.
+Error Handling: The project includes error handling to respond with appropriate HTTP status codes (e.g., 404 Not Found) when requested resources are not found.
+
+
+
+
+Request Class
+
+Request::Request()
+Description: This is the constructor for the Request class, used to create a new instance of an HTTP request.
+Parameters: None.
+Usage: Request request;
+
+string Request::get(string name)
+Description: Extracts the value associated with the specified key (parameter name) from the request's data.
+**Parameters:
+name (string): The name of the parameter to extract.
+Returns: A string containing the value associated with the specified key.
+Usage: string value = request.get("parameterName");
+
+void Request::setKeyValue(string k, string v)
+Description: Sets a key-value pair in the Request object.
+**Parameters:
+k (string): The key (parameter name).
+v (string): The value associated with the key.
+Usage: request.setKeyValue("parameterName", "parameterValue");
+
+string Request::getValue(string k)
+Description: Retrieves the value associated with the specified key from the Request object's key-value map.
+**Parameters:
+k (string): The key (parameter name) to look up.
+Returns: A string containing the value associated with the specified key.
+Usage: string value = request.getValue("parameterName");
+
+void Request::forward(string forwardTo)
+Description: Sets the forwardTo property of the Request object, indicating that the request should be forwarded to another URL.
+**Parameters:
+forwardTo (string): The URL to which the request should be forwarded.
+Usage: request.forward("/new-url");
+
+** forwarded request is treated special if its extension .tpl, in this HTML file the key enclosed in between $$${} is search on request object , if it is present then the value of corresponding key is put up instead of this.
+
+
+
+Response Class
+Response::Response(int clientSocketDescriptor)
+Description: This is the constructor for the Response class, used to create a new instance of an HTTP response.
+**Parameters:
+clientSocketDescriptor (int): The socket descriptor of the client connection.
+Usage: Response response(clientSocketDescriptor);
+
+void Response::write(const char *str)
+Description: Writes the provided character string to the client's socket.
+**Parameters:
+str (const char*): The string to be written to the client.
+Usage: response.write("Hello, World!");
+
+void Response::write(string str)
+Description: Writes the provided string to the client's socket.
+**Parameters:
+str (string): The string to be written to the client.
+Usage: response.write("Hello, World!");
+
+void Response::close()
+Description: Closes the client socket connection, ending the response.
+Usage: response.close();
+
+TMWebProjector Class
+TMWebProjector::TMWebProjector(int portNumber)
+Description: Constructor for the TMWebProjector class, used to create a new instance of a web projector.
+**Parameters:
+portNumber (int): The port number on which the web projector will listen for incoming connections.
+Usage: TMWebProjector webProjector(8080);
+
+void TMWebProjector::start()
+Description: Starts the web projector, allowing it to accept incoming HTTP requests and route them to the appropriate request handlers.
+Usage: TMwebProjector.start();
+
+void TMWebProjector::onRequest(string url, void(*ptrOnRequest)(Request &, Response &))
+Description: Registers a callback function to handle incoming requests to a specific URL.
+**Parameters:
+url (string): The URL for which the callback function should be invoked.
+ptrOnRequest (function pointer): The callback function to handle the request.
+Usage: webProjector.onRequest("/my-url", onRequestHandler);
+
+
+
+Resource Lookup Behavior
+The server searches for index.html when no resource name is present in the request.
+If index.html is absent, the server searches for index.htm.
+If both index.html and index.htm are absent, the server sends a custom 404 error page.
+
+This is a simple HTTP web server implemented in C++ using the TMWebProjector framework. The server listens on port 8080 and handles various HTTP requests. It provides the following functionalities:
+
+
+
+
+
+
+These documented functions and classes should help users understand how to use your HTTP web server in C++. 
+
+
+
+Examples :
+The following sample code is for present  how to start our server , bind to a port , forward a request .....
+#include<stdlib.h>
+#include<iostream>
+#include<tmwp>
+#include<ctime>
+using namespace std;
+using namespace tmwp;
+void dispatchTime(Request &request,Response &response)
+{
+time_t t=time(0);
+string  now=(string)ctime(&t);
+request.setKeyValue("time",now);
+request.forward("time.tpl");
+}
+void getCityView(Request &request,Response &response)
+{
+string cityCodeString=request.get("cityCode");
+int cityCode=atoi(cityCodeString.c_str());
+cout<<"City code is ("<<cityCode<<")"<<endl;
+if(cityCode==1) request.forward("Ujjain.html");
+else if(cityCode==2) request.forward("Indore.html");
+else if(cityCode==3) request.forward("Dewas.html");
+else
+{
+request.setKeyValue("error","Invalid Choice");
+request.setKeyValue("errorMessage","Invalid option selected");
+request.forward("errorPage.tpl");
+}
+}
+void saveEnquiry(Request &request,Response &response)
+{
+string n=request.get("nm nm");
+string c=request.get("ct");
+string a=request.get("ad");
+string m=request.get("msg");
+cout<<"Data received"<<endl;
+cout<<"Name : "<<n<<endl;
+cout<<"City  : "<<c<<endl;
+cout<<"Address  : "<<a<<endl;
+cout<<"Query : "<<m<<endl;
+// some logic to save data somewhere (may be a file or some database)
+request.forward("SaveNotification.html");
+}
+int main()
+{
+TMWebProjector server(8080);
+server.onRequest("/now",dispatchTime);
+server.onRequest("/getCity",getCityView);
+server.onRequest("/addEnquiry",saveEnquiry);
+server.start();
+return 0;
+}
+
+
+time.tpl
+
+<!DOCTYPE HTML>
+<html lang='en'>
+<head>
+<meta charset='utf-8'>
+<title>The Clock</title>
+</head>
+<body>
+<h1>
+$$${time}  // here value against key time is replaced by it.
+</h1>
+<a href='now'>Refresh</a><br>
+<a href='index.html'>Home</a><br>
+</body>
+</html>
+
+
