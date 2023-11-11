@@ -10,7 +10,7 @@ He will deploy his/her site on our webserver.
 
 
 How the Project Works
-Initialized server by creating a socket and binding it to a 8080 port number . 
+Initialized server by creating a socket and binding it to a specified port number . 
  When a client connects to the server, the accept function is used to accept the connection, and a new socket descriptor (clientSocketDescriptor) is created to handle communication with that client.
 The server reads data from the client using the recv function, which receives the HTTP request sent by the client.
 In request if no resource name is present then server will serve index.html,
@@ -174,15 +174,7 @@ The server searches for index.html when no resource name is present in the reque
 If index.html is absent, the server searches for index.htm.
 If both index.html and index.htm are absent, the server sends a custom 404 error page.
 
-This is a simple HTTP web server implemented in C++ using the TMWebProjector framework. The server listens on port 8080 and handles various HTTP requests. It provides the following functionalities:
-
-
-
-
-
-
-These documented functions and classes should help users understand how to use your HTTP web server in C++. 
-
+This is a simple HTTP web server implemented in C++ using the TMWebProjector framework. The server listens on a specified port and handles various HTTP requests.
 
 
 Examples :
